@@ -71,24 +71,24 @@ model User {
 }
 
 model Monitor {
-  id              String        @id @default(cuid())
-  userId          String
-  name            String
-  url             String
-  type            MonitorType   @default(HTTP)
-  status          MonitorStatus @default(PENDING)
-  interval        Int           @default(60)
-  timeout         Int           @default(30)
-  retries         Int           @default(3)
-  uptime          Float         @default(100)
-  lastCheckedAt   DateTime?
-  lastStatusCode  Int?
+  id               String        @id @default(cuid())
+  userId           String
+  name             String
+  url              String
+  type             MonitorType   @default(HTTP)
+  status           MonitorStatus @default(PENDING)
+  interval         Int           @default(60)
+  timeout          Int           @default(30)
+  retries          Int           @default(3)
+  uptime           Float         @default(100)
+  lastCheckedAt    DateTime?
+  lastStatusCode   Int?
   lastResponseTime Int?
-  sslExpiresAt    DateTime?
-  domainExpiresAt DateTime?
-  paused          Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  sslExpiresAt     DateTime?
+  domainExpiresAt  DateTime?
+  paused           Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   checks    Check[]
@@ -96,7 +96,6 @@ model Monitor {
 
   @@index([userId])
   @@index([status])
-  @@index([nextCheckAt])
 }
 
 model Check {
@@ -115,15 +114,15 @@ model Check {
 }
 
 model Incident {
-  id          String         @id @default(cuid())
-  userId      String
-  monitorId   String
-  status      IncidentStatus @default(OPEN)
-  cause       String?
-  startedAt   DateTime       @default(now())
-  resolvedAt  DateTime?
-  duration    Int?
-  createdAt   DateTime       @default(now())
+  id         String         @id @default(cuid())
+  userId     String
+  monitorId  String
+  status     IncidentStatus @default(OPEN)
+  cause      String?
+  startedAt  DateTime       @default(now())
+  resolvedAt DateTime?
+  duration   Int?
+  createdAt  DateTime       @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   monitor Monitor @relation(fields: [monitorId], references: [id], onDelete: Cascade)
@@ -149,13 +148,13 @@ model AlertConfig {
 }
 
 model Subscription {
-  id         String           @id @default(cuid())
-  userId     String           @unique
-  plan       SubscriptionPlan @default(FREE)
-  maxMonitors Int             @default(5)
-  expiresAt  DateTime?
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
+  id          String           @id @default(cuid())
+  userId      String           @unique
+  plan        SubscriptionPlan @default(FREE)
+  maxMonitors Int              @default(5)
+  expiresAt   DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
