@@ -12,13 +12,30 @@ const app = express();
 
 app.set('trust proxy', 1);
 
+const allowedOrigins: string[] = [
+  config.frontendUrl,
+  'http://localhost:3000',
+  'http://localhost:5173',
+  ...(process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+    : []),
+];
+
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(cors({
-  origin: [config.frontendUrl, 'http://localhost:3000', 'http://localhost:5173'],
-  credentials: true,
-  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization'],
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      if (config.nodeEnv === 'development') return callback(null, true);
+      logger.warn(`CORS blocked request from origin: ${origin}`);
+      callback(new Error(`CORS policy does not allow origin: ${origin}`));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
