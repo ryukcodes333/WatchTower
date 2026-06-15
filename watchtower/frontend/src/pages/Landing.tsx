@@ -5,7 +5,7 @@ import {
   Shield, Activity, Globe, Lock, Server, Bell, Zap, ChevronRight, CheckCircle,
   ArrowRight, Star, Users, TrendingUp, Clock, AlertTriangle, BarChart2,
   Code, Cpu, Eye, Menu, X, Play, ChevronDown, Check, MessageSquare, Mail,
-  Twitter, Github, Linkedin, ExternalLink, Database, Radio
+  Twitter, Github, Linkedin, ExternalLink, Database, Radio, CreditCard
 } from 'lucide-react';
 
 // ---- Animated Counter ----
