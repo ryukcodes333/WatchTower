@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MonitorType {
+  HTTP
+  API
+  SSL
+  DOMAIN
+}
+
+enum MonitorStatus {
+  UP
+  DOWN
+  PAUSED
+  PENDING
+}
+
+enum AlertChannel {
+  EMAIL
+  WHATSAPP
+  TELEGRAM
+  DISCORD
+  SLACK
+}
+
+enum AlertType {
+  SITE_DOWN
+  SITE_RECOVERED
+  SSL_EXPIRING
+  DOMAIN_EXPIRING
+  RESPONSE_TIME_HIGH
+}
+
+enum IncidentStatus {
+  OPEN
+  RESOLVED
+}
+
+enum SubscriptionPlan {
+  FREE
+  STARTER
+  PRO
+  BUSINESS
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  password          String
+  name              String
+  emailVerified     Boolean   @default(false)
+  verificationToken String?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  monitors      Monitor[]
+  alerts        AlertConfig[]
+  incidents     Incident[]
+  subscription  Subscription?
+  auditLogs     AuditLog[]
+
+  @@index([email])
+}
+
+model Monitor {
+  id              String        @id @default(cuid())
+  userId          String
+  name            String
+  url             String
+  type            MonitorType   @default(HTTP)
+  status          MonitorStatus @default(PENDING)
+  interval        Int           @default(60)
+  timeout         Int           @default(30)
+  retries         Int           @default(3)
+  uptime          Float         @default(100)
+  lastCheckedAt   DateTime?
+  lastStatusCode  Int?
+  lastResponseTime Int?
+  sslExpiresAt    DateTime?
+  domainExpiresAt DateTime?
+  paused          Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checks    Check[]
+  incidents Incident[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([nextCheckAt])
+}
+
+model Check {
+  id           String   @id @default(cuid())
+  monitorId    String
+  status       String
+  statusCode   Int?
+  responseTime Int?
+  error        String?
+  checkedAt    DateTime @default(now())
+
+  monitor Monitor @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+
+  @@index([monitorId])
+  @@index([checkedAt])
+}
+
+model Incident {
+  id          String         @id @default(cuid())
+  userId      String
+  monitorId   String
+  status      IncidentStatus @default(OPEN)
+  cause       String?
+  startedAt   DateTime       @default(now())
+  resolvedAt  DateTime?
+  duration    Int?
+  createdAt   DateTime       @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monitor Monitor @relation(fields: [monitorId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([monitorId])
+  @@index([status])
+}
+
+model AlertConfig {
+  id        String       @id @default(cuid())
+  userId    String
+  channel   AlertChannel @default(EMAIL)
+  target    String
+  enabled   Boolean      @default(true)
+  types     AlertType[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Subscription {
+  id         String           @id @default(cuid())
+  userId     String           @unique
+  plan       SubscriptionPlan @default(FREE)
+  maxMonitors Int             @default(5)
+  expiresAt  DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  detail    String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
